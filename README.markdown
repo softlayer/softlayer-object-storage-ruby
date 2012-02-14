@@ -7,7 +7,7 @@ Basic Usage
 ----------
 
 ```ruby
-sl_storage = SL::Storage::Connection.new({
+sl_storage = SoftLayer::ObjectStorage::Connection.new({
     :username => "YOUR_USERNAME", 
     :api_key => "YOUR_API_KEY", 
     :datacenter => :dal05
