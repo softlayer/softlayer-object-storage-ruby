@@ -1,6 +1,6 @@
 # See COPYING for license information.
-module Sl
-  module Storage
+module SoftLayer
+  module ObjectStorage
     VERSION = "0.0.1"
   end
 end

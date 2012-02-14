@@ -1,21 +1,21 @@
 # See COPYING for license information.
-module SL
-  module Storage
+module SoftLayer
+  module ObjectStorage
     class Container
       # Name of the container which corresponds to the instantiated container class
       attr_reader :name
 
-      # The parent SL::Storage::Connection object for this container
+      # The parent SoftLayer::ObjectStorage::Connection object for this container
       attr_reader :connection
 
-      # Retrieves an existing SL::Storage::Container object tied to the current SL::Storage::Connection.  If the requested
-      # container does not exist, it will raise a SL::Storage::Exception::NoSuchContainer Exception.
+      # Retrieves an existing SoftLayer::ObjectStorage::Container object tied to the current SoftLayer::ObjectStorage::Connection.  If the requested
+      # container does not exist, it will raise a SoftLayer::ObjectStorage::Exception::NoSuchContainer Exception.
       #
       # Will likely not be called directly, instead use connection.container('container_name') to retrieve the object.
       def initialize(connection, name)
         @connection = connection
         @name = name
-        # Load the metadata now, so we'll get a SL::Storage::Exception::NoSuchContainer exception should the container
+        # Load the metadata now, so we'll get a SoftLayer::ObjectStorage::Exception::NoSuchContainer exception should the container
         # not exist.
         self.container_metadata
       end
@@ -40,7 +40,7 @@ module SL
       # Retrieves Metadata for the container
       def container_metadata
         @metadata ||= (
-          response = SL::Swift::Client.head_container(self.connection.storageurl, self.connection.authtoken, escaped_name)
+          response = SoftLayer::Swift::Client.head_container(self.connection.storageurl, self.connection.authtoken, escaped_name)
           resphash = {}
           response.to_hash.select { |k,v| k.match(/^x-container-meta/) }.each { |x| resphash[x[0]] = x[1].to_s }
           {:bytes => response["x-container-bytes-used"].to_i, :count => response["x-container-object-count"].to_i, :metadata => resphash, :container_read => response["x-container-read"], :container_write => response["x-container-write"]}
@@ -50,7 +50,7 @@ module SL
       # Retrieves CDN-Enabled Meta Data
       def cdn_metadata
         @cdn_metadata ||= (
-          response = SL::Swift::Client.head_container(self.connection.storageurl, self.connection.authtoken, escaped_name, nil, true)
+          response = SoftLayer::Swift::Client.head_container(self.connection.storageurl, self.connection.authtoken, escaped_name, nil, true)
           resphash = {}
           response.to_hash.select { |k,v| k.match(/^x-cdn/i) }
         )
@@ -74,14 +74,14 @@ module SL
       # fails.
       def set_metadata(metadatahash)
         headers = {}
-        metadatahash.each{ |key, value| headers['X-Container-Meta-' + SL::Storage.escape(key.to_s.capitalize)] = value.to_s }
+        metadatahash.each{ |key, value| headers['X-Container-Meta-' + SoftLayer::ObjectStorage.escape(key.to_s.capitalize)] = value.to_s }
         begin
-          SL::Swift::Client.post_container(self.connection.storageurl, self.connection.authtoken, escaped_name, headers)
+          SoftLayer::Swift::Client.post_container(self.connection.storageurl, self.connection.authtoken, escaped_name, headers)
           self.refresh
           true
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::NoSuchObject, "Container #{@name} does not exist" if (e.status.to_s == "404")
-          raise SL::Storage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s =~ /^20/)
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::NoSuchObject, "Container #{@name} does not exist" if (e.status.to_s == "404")
+          raise SoftLayer::ObjectStorage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s =~ /^20/)
         end
       end
       
@@ -147,15 +147,15 @@ module SL
       def log_retention=(value)
         raise Exception::CDNNotAvailable unless cdn_available?
         begin
-          SL::Swift::Client.post_container(self.connection.cdnurl, self.connection.authtoken, escaped_name, {"x-log-retention" => value.to_s.capitalize})
+          SoftLayer::Swift::Client.post_container(self.connection.cdnurl, self.connection.authtoken, escaped_name, {"x-log-retention" => value.to_s.capitalize})
           true
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s == "201" or e.status.to_s == "202")
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s == "201" or e.status.to_s == "202")
         end
       end
 
 
-      # Returns the SL::Storage::StorageObject for the named object.  Refer to the SL::Storage::StorageObject class for available
+      # Returns the SoftLayer::ObjectStorage::StorageObject for the named object.  Refer to the SoftLayer::ObjectStorage::StorageObject class for available
       # methods.  If the object exists, it will be returned.  If the object does not exist, a NoSuchObjectException will be thrown.
       #
       #   object = container.object('test.txt')
@@ -165,7 +165,7 @@ module SL
       #   object = container.object('newfile.txt')
       #   => NoSuchObjectException: Object newfile.txt does not exist
       def object(objectname)
-        o = SL::Storage::StorageObject.new(self, objectname, true)
+        o = SoftLayer::ObjectStorage::StorageObject.new(self, objectname, true)
         return o
       end
       alias :get_object :object
@@ -193,20 +193,21 @@ module SL
         query = []
         params.each do |param, value|
           if [:limit, :marker, :prefix, :path, :delimiter].include? param
-            query << "#{param}=#{SL::Storage.escape(value.to_s)}"
+            query << "#{param}=#{SoftLayer::ObjectStorage.escape(value.to_s)}"
           end
         end
         begin
-          response = SL::Swift::Client.get_container(self.connection.storageurl, self.connection.authtoken, escaped_name, params[:marker], params[:limit], params[:prefix], params[:delimiter])
+          response = SoftLayer::Swift::Client.get_container(self.connection.storageurl, self.connection.authtoken, escaped_name, params[:marker], params[:limit], params[:prefix], params[:delimiter])
           return response[1].collect{|o| o['name']}
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s == "200")
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s == "200")
         end
       end
       alias :list_objects :objects
 
       def search(options = {})
-        
+        url = self.connection.storageurl + "/#{escaped_name}"
+        response = SoftLayer::Swift::Client.search(url, options, self.connection.authtoken )
       end
 
       # Retrieves a list of all objects in the current container along with their size in bytes, hash, and content_type.
@@ -215,7 +216,7 @@ module SL
       #
       # Accepts the same options as objects to limit the returned set.
       #
-      # Returns a hash in the same format as the containers_detail from the SL::Storage class.
+      # Returns a hash in the same format as the containers_detail from the SoftLayer::ObjectStorage class.
       #
       #   container.objects_detail
       #   => {"test.txt"=>{:content_type=>"application/octet-stream",
@@ -232,14 +233,14 @@ module SL
         query = ["format=xml"]
         params.each do |param, value|
           if [:limit, :marker, :prefix, :path, :delimiter].include? param
-            query << "#{param}=#{SL::Storage.escape(value.to_s)}"
+            query << "#{param}=#{SoftLayer::ObjectStorage.escape(value.to_s)}"
           end
         end
         begin 
-          response = SL::Swift::Client.get_container(self.connection.storageurl, self.connection.authtoken, escaped_name, params[:marker], params[:limit], params[:prefix], params[:delimiter])
+          response = SoftLayer::Swift::Client.get_container(self.connection.storageurl, self.connection.authtoken, escaped_name, params[:marker], params[:limit], params[:prefix], params[:delimiter])
           return Hash[*response[1].collect{|o| [o['name'],{ :bytes => o["bytes"], :hash => o["hash"], :content_type => o["content_type"], :last_modified => DateTime.parse(o["last_modified"])}] }.flatten]
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s == "200")
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s == "200")
         end
       end
       alias :list_objects_info :objects_detail
@@ -264,14 +265,14 @@ module SL
       #   => false
       def object_exists?(objectname)
         begin
-          response = SL::Swift::Client.head_object(self.connection.storageurl, self.connection.authtoken, escaped_name, objectname)
+          response = SoftLayer::Swift::Client.head_object(self.connection.storageurl, self.connection.authtoken, escaped_name, objectname)
           true
-        rescue SL::Swift::ClientException => e
+        rescue SoftLayer::Swift::ClientException => e
           false
         end
       end
 
-      # Creates a new SL::Storage::StorageObject in the current container.
+      # Creates a new SoftLayer::ObjectStorage::StorageObject in the current container.
       #
       # If an object with the specified name exists in the current container, that object will be returned.  Otherwise,
       # an empty new object will be returned.
@@ -280,10 +281,10 @@ module SL
       # to the object, if an objectname with path separators ("/path/to/myfile.mp3") is supplied.  These path objects can
       # be used in the Container.objects method.
       def create_object(objectname, make_path = false)
-        SL::Storage::StorageObject.new(self, objectname, false, make_path)
+        SoftLayer::ObjectStorage::StorageObject.new(self, objectname, false, make_path)
       end
 
-      # Removes an SL::Storage::StorageObject from a container.  True is returned if the removal is successful.  Throws
+      # Removes an SoftLayer::ObjectStorage::StorageObject from a container.  True is returned if the removal is successful.  Throws
       # NoSuchObjectException if the object doesn't exist.  Throws InvalidResponseException if the request fails.
       #
       #   container.delete_object('new.txt')
@@ -293,19 +294,19 @@ module SL
       #   => NoSuchObjectException: Object nonexistent_file.txt does not exist
       def delete_object(objectname)
         begin
-          SL::Swift::Client.delete_object(self.connection.storageurl, self.connection.authtoken, escaped_name, SL::Storage.escape(objectname))
+          SoftLayer::Swift::Client.delete_object(self.connection.storageurl, self.connection.authtoken, escaped_name, SoftLayer::ObjectStorage.escape(objectname))
           true
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::NoSuchObject, "Object #{objectname} does not exist" if (e.status.to_s == "404")
-          raise SL::Storage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s =~ /^20/)
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::NoSuchObject, "Object #{objectname} does not exist" if (e.status.to_s == "404")
+          raise SoftLayer::ObjectStorage::Exception::InvalidResponse, "Invalid response code #{e.status}" unless (e.status.to_s =~ /^20/)
         end
       end
 
       def set_ttl(ttl)
         begin
-          SL::Swift::Client.put_container(self.connection.storageurl, self.connection.authtoken, escaped_name)
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (e.status.to_s == "201" || e.status.to_s == "202")
+          SoftLayer::Swift::Client.put_container(self.connection.storageurl, self.connection.authtoken, escaped_name)
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (e.status.to_s == "201" || e.status.to_s == "202")
         end
         headers = { 
           "X-Context" => "cdn",
@@ -313,16 +314,16 @@ module SL
         }
 
         post_with_headers(headers)
-        # raise SL::Storage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (response.code == "201" || response.code == "202")
+        # raise SoftLayer::ObjectStorage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (response.code == "201" || response.code == "202")
         refresh
         true
       end
 
       def make_public(ttl = 4600)
         begin
-          SL::Swift::Client.put_container(self.connection.storageurl, self.connection.authtoken, escaped_name)
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (e.status.to_s == "201" || e.status.to_s == "202")
+          SoftLayer::Swift::Client.put_container(self.connection.storageurl, self.connection.authtoken, escaped_name)
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (e.status.to_s == "201" || e.status.to_s == "202")
         end
         headers = { 
           "X-Context" => "cdn",
@@ -331,7 +332,7 @@ module SL
         }
 
         post_with_headers(headers)
-        # raise SL::Storage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (response.code == "201" || response.code == "202")
+        # raise SoftLayer::ObjectStorage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (response.code == "201" || response.code == "202")
         refresh
         true
       end
@@ -354,9 +355,9 @@ module SL
 
       def post_with_headers(headers = {})
         begin
-          SL::Swift::Client.post_container(self.connection.storageurl, self.connection.authtoken, escaped_name, headers)
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::NoSuchContainer, "Container #{@name} does not exist (response code: #{e.status.to_s})" unless (e.status.to_s =~ /^20/)
+          SoftLayer::Swift::Client.post_container(self.connection.storageurl, self.connection.authtoken, escaped_name, headers)
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::NoSuchContainer, "Container #{@name} does not exist (response code: #{e.status.to_s})" unless (e.status.to_s =~ /^20/)
         end
       end
      
@@ -373,13 +374,9 @@ module SL
           "X-Context" => "cdn",
           "X-Container-Read" => " "
         }
-        begin
-          SL::Swift::Client.post_container(self.connection.storageurl, self.connection.authtoken, escaped_name, headers)
+          SoftLayer::Swift::Client.post_container(self.connection.storageurl, self.connection.authtoken, escaped_name, headers)
           refresh
           true
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::NoSuchContainer, "Container #{@name} does not exist" unless (e.status.to_s == "201" || e.status.to_s == "202")
-        end
       end
 
       # Purges CDN Edge Cache for all objects inside of this container
@@ -404,10 +401,10 @@ module SL
         headers = {}
         headers = {"X-Purge-Email" => email} if email
         begin
-          SL::Swift::Client.delete_container(self.connection.cdnurl, self.connection.authtoken, escaped_name, headers)
+          SoftLayer::Swift::Client.delete_container(self.connection.cdnurl, self.connection.authtoken, escaped_name, headers)
           true
-        rescue SL::Swift::ClientException => e
-          raise SL::Storage::Exception::Connection, "Error Unable to Purge Container: #{@name}" unless (e.status.to_s > "200" && e.status.to_s < "299")
+        rescue SoftLayer::Swift::ClientException => e
+          raise SoftLayer::ObjectStorage::Exception::Connection, "Error Unable to Purge Container: #{@name}" unless (e.status.to_s > "200" && e.status.to_s < "299")
         end
       end
 
@@ -420,7 +417,7 @@ module SL
       end
       
       def escaped_name
-        SL::Storage.escape(@name)
+        SoftLayer::ObjectStorage.escape(@name)
       end
 
     end

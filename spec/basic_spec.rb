@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe "SoftLayer Storage" do
   let(:sl_storage){
-    SL::Storage::Connection.new(CREDS)
+    SoftLayer::ObjectStorage::Connection.new(CREDS)
   }
   
   after(:all) do
@@ -92,6 +92,38 @@ describe "SoftLayer Storage" do
       object = container.create_object(temp_object_name)
       object.write("Test Data")
       object.purge
+    end
+  end
+
+  context "search" do
+    it "should find containers" do
+      results = sl_storage.search(:q => temp_container_name)
+      results[:count].should == 0
+      results[:total].should == 0
+
+      container = sl_storage.create_container(temp_container_name)
+      sleep(0.5)
+      
+      results = sl_storage.search(:q => temp_container_name)
+      results[:count].should == 1
+      results[:total].should == 1
+
+      sl_storage.delete_container(temp_container_name, true)
+    end
+
+    it "should find objects" do
+      container = sl_storage.create_container(temp_container_name)
+      results = container.search(:q => temp_object_name)
+      results[:count].should == 0
+      results[:total].should == 0
+
+      temp_object = container.create_object(temp_object_name)
+      temp_object.write("Test Data")
+      sleep(0.5)
+      
+      results = container.search(:q => temp_object_name)
+      results[:count].should == 1
+      results[:total].should == 1
     end
   end
 

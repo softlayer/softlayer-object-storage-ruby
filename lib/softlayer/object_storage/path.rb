@@ -1,6 +1,6 @@
 # See COPYING for license information.
-module SL
-  module Storage
+module SoftLayer
+  module ObjectStorage
     class Path
     
       attr_reader :container

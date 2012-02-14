@@ -30,8 +30,8 @@ end
 
 # The new properly scoped exceptions.
 
-module SL
-  module Storage
+module SoftLayer
+  module ObjectStorage
     module Exception
 
       class Syntax             < SyntaxException

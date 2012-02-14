@@ -1,9 +1,9 @@
 # See COPYING for license information.
-module SL
-  module Storage
+module SoftLayer
+  module ObjectStorage
     class Authentication
       def initialize(connection)
-          storage_url, auth_token, headers = SL::Swift::Client.get_auth(connection.auth_url, connection.authuser, connection.authkey)
+          storage_url, auth_token, headers = SoftLayer::Swift::Client.get_auth(connection.auth_url, connection.authuser, connection.authkey)
         if auth_token 
           parsed_storage_url = URI.parse(headers["x-storage-url"])
           connection.storagehost   = parsed_storage_url.host
@@ -14,10 +14,9 @@ module SL
           connection.authok        = true
         else
           connection.authtoken = false
-          raise SL::Storage::Exception::Authentication, "Authentication failed"
+          raise SoftLayer::ObjectStorage::Exception::Authentication, "Authentication failed"
         end
       end
-
     end
   end
 end

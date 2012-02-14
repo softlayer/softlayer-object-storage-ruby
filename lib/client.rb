@@ -4,7 +4,7 @@ require 'uri'
 require 'json'
 require "cgi"
 
-module SL
+module SoftLayer
   class Swift
     class ClientException < StandardError
       attr_reader :scheme, :host, :port, :path, :query, :status, :reason, :devices
@@ -623,6 +623,36 @@ module SL
       
       def delete_object(container, name, headers={})
         _retry(nil, :delete_object, [container, name, headers])
+      end
+
+      def self.search(url, options = {}, token = nil, http_conn = nil, headers={})
+        if not http_conn
+          http_conn = http_connection(url)
+        end
+        parsed = http_conn[0].clone
+        conn = http_conn[1]
+
+        conn.start if !conn.started?
+        options['format'] = 'json'
+        parsed.query = URI.encode_www_form(options)
+        headers['x-auth-token'] = token if token
+        headers['X-Context'] = 'search'
+        resp = conn.get(parsed.request_uri, headers)
+        if resp.code.to_i < 200 or resp.code.to_i > 300
+          raise ClientException.new('search failed', :http_scheme=>parsed.scheme,
+                      :http_host=>conn.address, :http_port=>conn.port,
+                      :http_path=>parsed.path, :http_status=>resp.code,
+                      :http_reason=>resp.message)
+        end
+        response = {
+          :count => resp.header["X-Search-Items-Count"].to_i,
+          :total => resp.header["X-Search-Items-Total"].to_i,
+        }
+        if resp.body
+          response[:items] = JSON.parse(resp.body)
+        end
+        response
+
       end
     end
   end
