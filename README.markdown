@@ -7,7 +7,11 @@ Basic Usage
 ----------
 
 ```ruby
-sl_storage = SL::Storage::Connection.new(:username => "YOUR_USERNAME", :api_key => "YOUR_API_KEY", :datacenter => :dal05)
+sl_storage = SL::Storage::Connection.new({
+    :username => "YOUR_USERNAME", 
+    :api_key => "YOUR_API_KEY", 
+    :datacenter => :dal05
+})
 
 sl_storage.containers
 # ["foo"]
