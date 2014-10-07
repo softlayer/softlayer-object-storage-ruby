@@ -221,9 +221,9 @@ module SoftLayer
         end
         query = Query.new(parsed.query)
         query.add('format', 'json')
-        query.add('marker', SL::Swift.quote(marker.to_s)) if marker
-        query.add('limit', SL::Swift.quote(limit.to_s)) if limit
-        query.add('prefix', SL::Swift.quote(prefix.to_s)) if prefix
+        query.add('marker', SoftLayer::Swift.quote(marker.to_s)) if marker
+        query.add('limit', SoftLayer::Swift.quote(limit.to_s)) if limit
+        query.add('prefix', SoftLayer::Swift.quote(prefix.to_s)) if prefix
         parsed.query = query.to_url_params
         conn.start if !conn.started?
         headers = {'x-auth-token' => token}
@@ -319,9 +319,9 @@ module SoftLayer
         end
         query = Query.new(parsed.query)
         query.add('format', 'json')
-        query.add('marker', SL::Swift.quote(marker.to_s)) if marker
-        query.add('limit', SL::Swift.quote(limit.to_s)) if limit
-        query.add('prefix', SL::Swift.quote(prefix.to_s)) if prefix
+        query.add('marker', SoftLayer::Swift.quote(marker.to_s)) if marker
+        query.add('limit', SoftLayer::Swift.quote(limit.to_s)) if limit
+        query.add('prefix', SoftLayer::Swift.quote(prefix.to_s)) if prefix
         parsed.query = query.to_url_params
         conn.start if !conn.started?
         parsed.path += "/#{container}"
