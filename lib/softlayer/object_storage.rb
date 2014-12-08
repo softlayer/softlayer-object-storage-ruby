@@ -64,6 +64,16 @@ module SoftLayer
 		  :https => "https://lon02.objectstorage.service.networklayer.com/auth/v1.0"
 		}
 	  },
+	  :par01 => {
+		:public => {
+		  :http => "http://par01.objectstorage.softlayer.net/auth/v1.0",
+		  :https => "https://par01.objectstorage.softlayer.net/auth/v1.0"
+		},
+		:private => {
+		  :http => "http://par01.objectstorage.service.networklayer.com/auth/v1.0",
+		  :https => "https://par01.objectstorage.service.networklayer.com/auth/v1.0"
+		}
+	  },
 	  :sng01 => {
 		:public => {
 		  :http => "http://sng01.objectstorage.softlayer.net/auth/v1.0",
@@ -83,9 +93,19 @@ module SoftLayer
 		  :http => "http://hkg02.objectstorage.service.networklayer.com/auth/v1.0",
 		  :https => "https://hkg02.objectstorage.service.networklayer.com/auth/v1.0"
 		}
+	  },
+	  :mel01 => {
+		:public => {
+		  :http => "http://mel01.objectstorage.softlayer.net/auth/v1.0",
+		  :https => "https://mel01.objectstorage.softlayer.net/auth/v1.0"
+		},
+		:private => {
+		  :http => "http://mel01.objectstorage.service.networklayer.com/auth/v1.0",
+		  :https => "https://mel01.objectstorage.service.networklayer.com/auth/v1.0"
+		}
 	  }
-}
- 
+	}
+
     def self.escape(str)
       URI.escape(str,  Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
     end
