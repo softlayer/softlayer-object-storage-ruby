@@ -3,10 +3,18 @@ SoftLayer Object Storage Ruby Client
 
 Ruby bindings for SoftLayer Object Storage
 
+Installation from Source
+------------------------
+git clone https://github.com/softlayer/softlayer-object-storage-ruby.git
+cd softlayer-object-storage
+gem build softlayer-object-storage.gemspec 
+gem install softlayer-object-storage 
+
 Basic Usage
 ----------
 
 ```ruby
+require 'softlayer/object_storage'
 sl_storage = SoftLayer::ObjectStorage::Connection.new({
     :username => "YOUR_USERNAME", 
     :api_key => "YOUR_API_KEY", 
