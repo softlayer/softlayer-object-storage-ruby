@@ -355,6 +355,19 @@ module SoftLayer
           container.cdn_urls.map {|k,v| v += "/#{escaped_name}"}
         )
       end
+
+      # Get URL for temporary public access.
+      #
+      def temp_url(min)
+        expires = (Time.now.getutc + 60 * min).to_i
+        path = "#{container.connection.storagepath}/#{container.name}/#{name}"
+        body = "GET\n#{expires}\n#{path}"
+        sig = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'),
+                                      container.connection.temp_url_key,
+                                      body)
+        path = "#{container.connection.storageurl}/#{container.name}/#{name}"
+        "#{path}?temp_url_sig=#{sig}&temp_url_expires=#{expires}"
+      end
       
       # Copy this object to a new location (optionally in a new container)
       #
