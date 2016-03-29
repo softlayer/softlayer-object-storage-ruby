@@ -272,6 +272,23 @@ module SoftLayer
         end
       end
 
+      # Returns Temp Url for given object.
+      #
+      def object_temp_url(objectname, min)
+        begin
+          expires = (Time.now.getutc + 60 * min).to_i
+          path = "#{self.connection.storagepath}/#{self.name}/#{objectname}"
+          body = "GET\n#{expires}\n#{path}"
+          sig = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'),
+                                        self.connection.temp_url_key,
+                                        body)
+          path = "#{self.connection.storageurl}/#{self.name}/#{objectname}"
+          "#{path}?temp_url_sig=#{sig}&temp_url_expires=#{expires}"
+        rescue
+          nil
+        end
+      end
+
       # Creates a new SoftLayer::ObjectStorage::StorageObject in the current container.
       #
       # If an object with the specified name exists in the current container, that object will be returned.  Otherwise,
