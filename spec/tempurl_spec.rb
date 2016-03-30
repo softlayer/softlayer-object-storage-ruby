@@ -5,6 +5,16 @@ RSpec.describe SoftLayer::ObjectStorage do
     SoftLayer::ObjectStorage::Connection.new(CREDS)
   }
 
+  it "should get temp_url_key from connection." do
+    r = conn.search()
+    started = Time.now
+    (1..40).each do
+      conn.temp_url_key
+    end
+    spent = Time.now - started
+    expect(spent < 2.0)
+  end
+
   it "should generate TempURL for first object" do
     r = conn.search()
     expect(r[:count]).not_to eq(0)

@@ -107,7 +107,7 @@ module SoftLayer
       end
 
       def temp_url_key
-        get_info[:temp_url_key]
+        @temp_url_key ||= get_info[:temp_url_key]
       end
 
       def containers(limit = nil, marker = nil)
