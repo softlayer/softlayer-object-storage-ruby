@@ -103,7 +103,17 @@ module SoftLayer
 		  :http => "http://mel01.objectstorage.service.networklayer.com/auth/v1.0",
 		  :https => "https://mel01.objectstorage.service.networklayer.com/auth/v1.0"
 		}
-	  }
+	  },
+	  :wdc01 => {
+		:public => {
+		  :http => "http://wdc.objectstorage.softlayer.net/auth/v1.0",
+		  :https => "https://wdc.objectstorage.softlayer.net/auth/v1.0"
+		},
+		:private => {
+		  :http => "http://wdc.objectstorage.service.networklayer.com/auth/v1.0",
+		  :https => "https://wdc.objectstorage.service.networklayer.com/auth/v1.0"
+		}
+	  },
 	}
 
     def self.escape(str)
