@@ -46,6 +46,8 @@ module SoftLayer
       # Instance variable that is set when authorization succeeds
       attr_accessor :authok
 
+      attr_accessor :temp_url_key
+
       # Optional proxy variables
       attr_reader :proxy_host
       attr_reader :proxy_port
@@ -89,7 +91,8 @@ module SoftLayer
           response = SoftLayer::Swift::Client.head_account(storageurl, self.authtoken)
           @bytes = response["x-account-bytes-used"].to_i
           @count = response["x-account-container-count"].to_i
-          {:bytes => @bytes, :count => @count}
+          @temp_url_key = response["x-account-meta-temp-url-key"]
+          {:bytes => @bytes, :count => @count, :temp_url_key => @temp_url_key}
         rescue SoftLayer::Swift::ClientException => e
           raise SoftLayer::ObjectStorage::Exception::InvalidResponse, "Unable to obtain account size" unless (e.status.to_s == "204")
         end
@@ -101,6 +104,10 @@ module SoftLayer
       
       def count
         get_info[:count]
+      end
+
+      def temp_url_key
+        @temp_url_key ||= get_info[:temp_url_key]
       end
 
       def containers(limit = nil, marker = nil)

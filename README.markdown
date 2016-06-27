@@ -5,10 +5,13 @@ Ruby bindings for SoftLayer Object Storage
 
 Installation from Source
 ------------------------
+
+```
 git clone https://github.com/softlayer/softlayer-object-storage-ruby.git
 cd softlayer-object-storage
 gem build softlayer-object-storage.gemspec 
 gem install softlayer-object-storage 
+```
 
 Basic Usage
 ----------
@@ -55,3 +58,13 @@ puts results[:items][0].inspect
 ```
 
 For complete usage examples, see the specs.
+
+Temporary Public Access
+-----------------------
+
+To get temporary url with 30 minutes expiration from now,
+
+```ruby
+puts object.temp_url(30)
+```
+
