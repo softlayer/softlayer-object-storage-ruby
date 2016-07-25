@@ -5,10 +5,10 @@ Ruby bindings for SoftLayer Object Storage
 
 Installation from Source
 ------------------------
-git clone https://github.com/softlayer/softlayer-object-storage-ruby.git
-cd softlayer-object-storage
-gem build softlayer-object-storage.gemspec 
-gem install softlayer-object-storage 
+* git clone https://github.com/softlayer/softlayer-object-storage-ruby.git
+* cd softlayer-object-storage
+* gem build softlayer-object-storage.gemspec 
+* gem install softlayer-object-storage 
 
 Basic Usage
 ----------
