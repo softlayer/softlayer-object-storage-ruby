@@ -43,7 +43,7 @@ module SoftLayer
       
       def read(foo, out = nil)
         if out && out.respond_to?("write")
-          out.write @file.read(@size)
+          @file.read(@size, out)
         else
           @file.read(@size)
         end
