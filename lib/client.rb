@@ -41,8 +41,12 @@ module SoftLayer
         @file = data
       end
       
-      def read(foo)
-        @file.read(@size)
+      def read(foo, out = nil)
+        if out && out.respond_to?("write")
+          @file.read(@size, out)
+        else
+          @file.read(@size)
+        end
       end
 
       def eof!
